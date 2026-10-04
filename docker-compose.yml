@@ -1,0 +1,54 @@
+services:
+
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: memorymate-db
+
+    environment:
+      POSTGRES_DB: memorymate
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+
+  backend:
+    build:
+      context: ./backend
+
+    container_name: memorymate-backend
+
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/memorymate
+      OLLAMA_URL: http://host.docker.internal:11434
+      GEMMA_MODEL: gemma3:4b
+
+    ports:
+      - "8000:8000"
+
+    depends_on:
+      - db
+
+
+  frontend:
+    build:
+      context: ./frontend
+
+    container_name: memorymate-frontend
+
+    environment:
+      VITE_API_URL: http://localhost:8000
+
+    ports:
+      - "5173:80"
+
+    depends_on:
+      - backend
+
+
+volumes:
+  postgres_data:
